@@ -1,0 +1,47 @@
+import '../models.dart';
+import 'world1.dart';
+import 'world2.dart';
+import 'world3.dart';
+import 'world4.dart';
+import 'world5.dart';
+import 'world6.dart';
+import 'world7.dart';
+import 'world8.dart';
+
+/// The full campaign in order.
+final List<World> kWorlds = [
+  world1, world2, world3, world4, world5, world6, world7, world8,
+];
+
+/// Flattened list of every level in campaign order.
+List<Level> get allLevels =>
+    [for (final w in kWorlds) ...w.levels];
+
+/// Ordered level ids (for unlock logic).
+List<String> get orderedIds =>
+    [for (final l in allLevels) l.id];
+
+/// Find a level by id.
+Level? levelById(String id) {
+  for (final l in allLevels) {
+    if (l.id == id) return l;
+  }
+  return null;
+}
+
+/// Index of a level inside its world.
+int levelIndexInWorld(Level level) {
+  for (final w in kWorlds) {
+    final i = w.levels.indexOf(level);
+    if (i >= 0) return i;
+  }
+  return -1;
+}
+
+/// The level that comes right after [id] in the campaign, or null.
+Level? nextLevel(String id) {
+  final ids = orderedIds;
+  final i = ids.indexOf(id);
+  if (i < 0 || i + 1 >= ids.length) return null;
+  return levelById(ids[i + 1]);
+}

@@ -1,0 +1,27 @@
+name: codearena
+description: "CodeArena - aprende C++ y algoritmos jugando / learn C++ and DSA by playing"
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.3.0
+  code_text_field: ^1.1.0
+  flutter_highlight: ^0.7.0
+  highlight: ^0.7.0
+  flutter_js: ^0.8.2
+  web: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/vendor/

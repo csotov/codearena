@@ -1,0 +1,25 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+
+# Android
+android/app/debug
+android/app/profile
+android/app/release
+android/key.properties
+*.jks
+*.keystore
+local.properties
+
+# Web
+/web/favicon.png.tmp
+
+# OS
+Thumbs.db
+.DS_Store
