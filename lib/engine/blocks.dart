@@ -401,10 +401,11 @@ List<BlockNode> blocksFromJson(List<dynamic>? j) => (j ?? [])
 /// Generate a complete C++ program from the block forest.
 String blocksToCode(List<BlockNode> roots) {
   final b = StringBuffer()
+    // NOTE: do NOT include both <cmath> and <cstdlib> — JSCPP registers
+    // abs(int) twice and the program fails to compile.
     ..writeln('#include <iostream>')
     ..writeln('#include <cstring>')
     ..writeln('#include <cmath>')
-    ..writeln('#include <cstdlib>')
     ..writeln('using namespace std;')
     ..writeln('int main() {');
   _emitNodes(roots, 1, b);

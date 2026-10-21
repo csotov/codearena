@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models.dart';
+
 /// Per-level saved state.
 class LevelProgress {
   LevelProgress({
@@ -120,15 +122,13 @@ class Progress extends ChangeNotifier {
     _save();
   }
 
-  /// Linear campaign: a level unlocks when every level before it
-  /// (across the flattened world list) is solved.
-  bool isUnlocked(String levelId, List<String> orderedIds) {
-    final idx = orderedIds.indexOf(levelId);
+  /// Campaign rule: the first level of every world is always unlocked,
+  /// so the player can jump between worlds freely; inside a world,
+  /// each level opens when the previous one is solved.
+  bool isUnlocked(Level level, World world) {
+    final idx = world.levels.indexWhere((l) => l.id == level.id);
     if (idx <= 0) return true;
-    for (var i = 0; i < idx; i++) {
-      if (!(levels[orderedIds[i]]?.solved ?? false)) return false;
-    }
-    return true;
+    return levels[world.levels[idx - 1].id]?.solved ?? false;
   }
 
   int get totalStars =>

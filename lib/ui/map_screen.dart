@@ -71,7 +71,7 @@ class _MapScreenState extends State<MapScreen> {
                         fontSize: 12,
                         fontStyle: FontStyle.italic)),
               ),
-              for (final w in kWorlds) _worldSection(w, ids),
+              for (final w in kWorlds) _worldSection(w),
             ],
           ),
         );
@@ -112,13 +112,13 @@ class _MapScreenState extends State<MapScreen> {
     if (ok == true) await Progress.instance.reset();
   }
 
-  Widget _worldSection(World w, List<String> ids) {
+  Widget _worldSection(World w) {
     final l = L.instance;
     final progress = Progress.instance;
     final solvedInWorld =
         w.levels.where((lv) => progress.of(lv.id).solved).length;
-    final worldUnlocked = w.levels
-        .any((lv) => progress.isUnlocked(lv.id, ids));
+    final worldUnlocked =
+        w.levels.any((lv) => progress.isUnlocked(lv, w));
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
@@ -180,7 +180,7 @@ class _MapScreenState extends State<MapScreen> {
             runSpacing: 10,
             children: [
               for (var i = 0; i < w.levels.length; i++)
-                _levelNode(w.levels[i], i, ids),
+                _levelNode(w, i),
             ],
           ),
         ],
@@ -188,10 +188,11 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _levelNode(Level level, int index, List<String> ids) {
+  Widget _levelNode(World world, int index) {
+    final level = world.levels[index];
     final progress = Progress.instance;
     final p = progress.of(level.id);
-    final unlocked = progress.isUnlocked(level.id, ids);
+    final unlocked = progress.isUnlocked(level, world);
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
