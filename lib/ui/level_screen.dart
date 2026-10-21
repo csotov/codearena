@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/worlds.dart';
 import '../engine/blocks.dart';
+import '../engine/blocks_vm.dart';
 import '../engine/cpp_runner.dart';
 import '../engine/judge.dart';
 import '../engine/runner.dart';
@@ -60,6 +61,12 @@ class _LevelScreenState extends State<LevelScreen>
     super.dispose();
   }
 
+  /// Engine for the current editor state: the block VM executes the
+  /// block tree directly (instant, no compiler errors) until the
+  /// player promotes to the real C++ editor.
+  CppRunner get _engine =>
+      (_usesBlocks && !_promotedToCode) ? BlocksRunner(_roots) : _runner;
+
   /// The C++ source that will be executed right now.
   String get _currentCode {
     if (widget.level.mode == EditorMode.code || _promotedToCode) {
@@ -87,7 +94,7 @@ class _LevelScreenState extends State<LevelScreen>
     _persist();
     final sample =
         widget.level.samples.isNotEmpty ? widget.level.samples.first : null;
-    final res = await _runner.run(_currentCode, sample?.input ?? '',
+    final res = await _engine.run(_currentCode, sample?.input ?? '',
         maxOps: widget.level.maxOps);
     if (!mounted) return;
     setState(() {
@@ -115,7 +122,7 @@ class _LevelScreenState extends State<LevelScreen>
     _attemptsThisSession++;
     Progress.instance.recordAttempt(widget.level.id);
 
-    final report = await judge(_runner, widget.level, _currentCode,
+    final report = await judge(_engine, widget.level, _currentCode,
         onProgress: (done, total) {
       if (mounted) {
         setState(() => _busyLabel = '$done/$total');
