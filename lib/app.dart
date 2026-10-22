@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'l10n.dart';
-import 'ui/map_screen.dart';
+import 'services/sfx.dart';
+import 'ui/splash.dart';
 import 'ui/theme.dart';
 
 class CodeArenaApp extends StatelessWidget {
@@ -11,11 +12,15 @@ class CodeArenaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
       valueListenable: L.instance.lang,
-      builder: (context, lang, _) => MaterialApp(
-        title: 'CodeArena',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.theme,
-        home: const MapScreen(),
+      // First user gesture unlocks audio on web (autoplay policy).
+      builder: (context, lang, _) => Listener(
+        onPointerDown: (_) => Sfx.poke(),
+        child: MaterialApp(
+          title: 'CodeArena',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.theme,
+          home: const SplashScreen(),
+        ),
       ),
     );
   }

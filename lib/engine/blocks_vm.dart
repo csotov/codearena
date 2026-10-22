@@ -95,13 +95,12 @@ class _Vm {
 
   void _exec(BlockNode n) {
     _tick();
-    final p = n.params;
     switch (n.defId) {
       // ---- io -------------------------------------------------------------
       case 'print_text':
         out.writeln(_param(n, 'text'));
       case 'print_expr':
-        out.writeln('${_strVal(_eval(_param(n, 'expr', '0')))}');
+        out.writeln(_strVal(_eval(_param(n, 'expr', '0'))));
       case 'print_inline':
         out.write(_strVal(_eval(_param(n, 'expr', '0'))));
       case 'print_space':

@@ -89,6 +89,31 @@ class RankXpBar extends StatelessWidget {
   }
 }
 
+/// Small rank badge chip.
+class RankChip extends StatelessWidget {
+  const RankChip({super.key, required this.rank});
+  final Rank rank;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Color(rank.color).withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Color(rank.color)),
+      ),
+      child: Text(
+        L.instance.t(rank.key),
+        style: TextStyle(
+            color: Color(rank.color),
+            fontWeight: FontWeight.bold,
+            fontSize: 13),
+      ),
+    );
+  }
+}
+
 /// Titled card used for sections on both screens.
 class SectionCard extends StatelessWidget {
   const SectionCard({

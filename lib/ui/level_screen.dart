@@ -9,6 +9,7 @@ import '../engine/runner.dart';
 import '../l10n.dart';
 import '../models.dart';
 import '../services/progress.dart';
+import '../services/sfx.dart';
 import 'blocks_editor.dart';
 import 'code_editor.dart';
 import 'results.dart';
@@ -27,6 +28,11 @@ class LevelScreen extends StatefulWidget {
 
 class _LevelScreenState extends State<LevelScreen>
     with SingleTickerProviderStateMixin {
+  /// Battle music keeps playing while a level is on screen; when the
+  /// last level route closes (pushReplacement counts as a swap), we
+  /// fall back to the menu track.
+  static int _openLevels = 0;
+
   late final CppRunner _runner;
   late final List<BlockNode> _roots;
   final GlobalKey<CodeEditorState> _editorKey = GlobalKey();
@@ -48,6 +54,8 @@ class _LevelScreenState extends State<LevelScreen>
   void initState() {
     super.initState();
     _runner = createRunner();
+    _openLevels++;
+    Sfx.battle();
     final saved = Progress.instance.of(widget.level.id);
     _roots = blocksFromJson(saved.blocksJson);
     _savedCode = saved.code.isNotEmpty ? saved.code : widget.level.starterCode;
@@ -59,6 +67,11 @@ class _LevelScreenState extends State<LevelScreen>
   void dispose() {
     _tabController.dispose();
     _runner.dispose();
+    _openLevels--;
+    if (_openLevels <= 0) {
+      _openLevels = 0;
+      Sfx.menu();
+    }
     super.dispose();
   }
 

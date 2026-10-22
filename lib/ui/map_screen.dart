@@ -5,7 +5,10 @@ import '../data/worlds.dart';
 import '../l10n.dart';
 import '../models.dart';
 import '../services/progress.dart';
+import '../services/sfx.dart';
+import 'dashboard.dart';
 import 'level_screen.dart';
+import 'profiles.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -41,6 +44,27 @@ class _MapScreenState extends State<MapScreen> {
               ],
             ),
             actions: [
+              _profileChip(),
+              IconButton(
+                tooltip: l.t('dashboard'),
+                icon: const Icon(Icons.leaderboard_outlined),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const DashboardScreen()),
+                ),
+              ),
+              IconButton(
+                tooltip:
+                    l.t(Sfx.muted ? 'music_off' : 'music_on'),
+                icon: Icon(Sfx.muted
+                    ? Icons.music_off_outlined
+                    : Icons.music_note_outlined),
+                onPressed: () async {
+                  await Sfx.toggleMute();
+                  if (mounted) setState(() {});
+                },
+              ),
               _langButton(),
               IconButton(
                 tooltip: l.t('reset_progress'),
@@ -110,6 +134,44 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
     if (ok == true) await Progress.instance.reset();
+  }
+
+  Widget _profileChip() {
+    final p = Progress.instance.active;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => ProfilePicker.show(context),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppTheme.card,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppTheme.cardEdge),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(p?.emoji ?? '🐯', style: const TextStyle(fontSize: 16)),
+              const SizedBox(width: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 90),
+                child: Text(
+                  p?.name ?? 'Jugador',
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.swap_horiz,
+                  size: 14, color: AppTheme.textLo),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _worldSection(World w) {

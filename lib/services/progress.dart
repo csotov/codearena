@@ -42,15 +42,40 @@ class LevelProgress {
       );
 }
 
-/// Global persistent progress: XP, solved levels, saved code, language.
+/// A player slot: independent progress so several kids can share a
+/// device (or one player can start from zero without losing the old run).
+class Profile {
+  Profile({required this.id, required this.name, required this.emoji});
+
+  final String id;
+  String name;
+  String emoji;
+
+  Map<String, dynamic> toJson() => {'id': id, 'n': name, 'e': emoji};
+
+  factory Profile.fromJson(Map<String, dynamic> j) => Profile(
+        id: j['id'] as String,
+        name: j['n'] as String? ?? 'Jugador',
+        emoji: j['e'] as String? ?? '🐯',
+      );
+}
+
+/// Global persistent progress: XP, solved levels, saved code, language —
+/// namespaced by the active [Profile] slot.
 class Progress extends ChangeNotifier {
   Progress._();
   static final Progress instance = Progress._();
 
-  static const _prefsKey = 'codearena_progress_v1';
+  static const _legacyKey = 'codearena_progress_v1';
+  static const _profilesKey = 'codearena_profiles_v1';
+  static const _activeKey = 'codearena_active_v1';
+  static String _keyFor(String id) => 'codearena_progress_$id';
 
   int xp = 0;
   final Map<String, LevelProgress> levels = {};
+
+  final List<Profile> profiles = [];
+  Profile? active;
 
   Future<void>? _loading;
 
@@ -58,7 +83,43 @@ class Progress extends ChangeNotifier {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_prefsKey);
+    // profiles
+    final rawProfiles = prefs.getString(_profilesKey);
+    if (rawProfiles != null) {
+      try {
+        for (final j in jsonDecode(rawProfiles) as List) {
+          profiles.add(Profile.fromJson(Map<String, dynamic>.from(j)));
+        }
+      } catch (_) {}
+    }
+    // migrate legacy single-slot progress -> first profile
+    if (profiles.isEmpty) {
+      final p = Profile(
+          id: 'p${DateTime.now().millisecondsSinceEpoch}',
+          name: 'Jugador 1',
+          emoji: '🐯');
+      profiles.add(p);
+      final legacy = prefs.getString(_legacyKey);
+      if (legacy != null) {
+        await prefs.setString(_keyFor(p.id), legacy);
+        await prefs.remove(_legacyKey);
+      }
+      await prefs.setString(_profilesKey,
+          jsonEncode(profiles.map((e) => e.toJson()).toList()));
+      await prefs.setString(_activeKey, p.id);
+    }
+    final activeId = prefs.getString(_activeKey) ?? profiles.first.id;
+    await _loadProfile(activeId, save: false);
+    notifyListeners();
+  }
+
+  Future<void> _loadProfile(String id, {bool save = true}) async {
+    final prefs = await SharedPreferences.getInstance();
+    active = profiles.firstWhere((p) => p.id == id,
+        orElse: () => profiles.first);
+    xp = 0;
+    levels.clear();
+    final raw = prefs.getString(_keyFor(active!.id));
     if (raw != null) {
       try {
         final j = jsonDecode(raw) as Map<String, dynamic>;
@@ -69,17 +130,54 @@ class Progress extends ChangeNotifier {
         });
       } catch (_) {/* corrupted state -> start fresh */}
     }
-    notifyListeners();
+    if (save) await prefs.setString(_activeKey, active!.id);
   }
 
   Future<void> _save() async {
+    if (active == null) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-        _prefsKey,
+        _keyFor(active!.id),
         jsonEncode({
           'xp': xp,
           'lv': levels.map((k, v) => MapEntry(k, v.toJson())),
         }));
+  }
+
+  Future<void> _saveProfiles() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_profilesKey,
+        jsonEncode(profiles.map((e) => e.toJson()).toList()));
+  }
+
+  /// Create a fresh slot and make it active (starts from zero).
+  Future<Profile> createProfile(String name, String emoji) async {
+    final p = Profile(
+        id: 'p${DateTime.now().millisecondsSinceEpoch}',
+        name: name.trim().isEmpty ? 'Jugador' : name.trim(),
+        emoji: emoji);
+    profiles.add(p);
+    await _saveProfiles();
+    await _loadProfile(p.id);
+    await _save();
+    notifyListeners();
+    return p;
+  }
+
+  /// Switch to an existing slot.
+  Future<void> switchProfile(String id) async {
+    if (active?.id == id) return;
+    await _loadProfile(id);
+    notifyListeners();
+  }
+
+  /// Rename/recolor the active profile.
+  Future<void> updateActive({String? name, String? emoji}) async {
+    if (active == null) return;
+    if (name != null && name.trim().isNotEmpty) active!.name = name.trim();
+    if (emoji != null) active!.emoji = emoji;
+    await _saveProfiles();
+    notifyListeners();
   }
 
   LevelProgress of(String levelId) =>
@@ -136,12 +234,14 @@ class Progress extends ChangeNotifier {
 
   int get solvedCount => levels.values.where((p) => p.solved).length;
 
+  /// Reset only the ACTIVE profile's progress (start from zero).
   Future<void> reset() async {
     xp = 0;
     levels.clear();
-    _loading = null;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_prefsKey);
+    if (active != null) {
+      await prefs.remove(_keyFor(active!.id));
+    }
     notifyListeners();
   }
 }

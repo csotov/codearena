@@ -139,5 +139,26 @@ class L {
       'es': 'Consejo: lee la misión, mira los ejemplos y prueba tu código antes de combatir.',
       'en': 'Tip: read the mission, check the examples, and test your code before fighting.'
     },
+    // --- profiles & dashboard -------------------------------------------
+    'who_plays': {'es': '¿Quién juega?', 'en': "Who's playing?"},
+    'new_profile': {'es': 'Nuevo jugador', 'en': 'New player'},
+    'profile_name': {'es': 'Nombre', 'en': 'Name'},
+    'choose_avatar': {'es': 'Elige tu avatar', 'en': 'Choose your avatar'},
+    'create': {'es': 'Crear', 'en': 'Create'},
+    'switch_profile': {'es': 'Cambiar jugador', 'en': 'Switch player'},
+    'start_fresh': {
+      'es': 'Empezar de cero con un perfil nuevo',
+      'en': 'Start fresh with a new profile'
+    },
+    'dashboard': {'es': 'Panel de resultados', 'en': 'Progress dashboard'},
+    'accuracy': {'es': 'Precisión', 'en': 'Accuracy'},
+    'total_xp': {'es': 'XP total', 'en': 'Total XP'},
+    'levels_solved': {'es': 'Niveles resueltos', 'en': 'Levels solved'},
+    'to_next_rank': {'es': 'para el siguiente rango', 'en': 'to next rank'},
+    'world_progress': {'es': 'Progreso por mundo', 'en': 'World progress'},
+    'perfect_levels': {'es': 'Niveles perfectos', 'en': 'Perfect levels'},
+    'music': {'es': 'Música', 'en': 'Music'},
+    'music_on': {'es': 'Música activada', 'en': 'Music on'},
+    'music_off': {'es': 'Música desactivada', 'en': 'Music off'},
   };
 }
