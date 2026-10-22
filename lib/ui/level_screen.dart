@@ -13,6 +13,7 @@ import 'blocks_editor.dart';
 import 'code_editor.dart';
 import 'results.dart';
 import 'theme.dart';
+import 'victory.dart';
 import 'widgets.dart';
 
 /// The battle screen: mission briefing + editor + run/judge.
@@ -130,33 +131,32 @@ class _LevelScreenState extends State<LevelScreen>
     });
     if (!mounted) return;
     setState(() => _busy = false);
-    await ResultsSheet.show(context, report);
-    if (!mounted || !report.allPassed) return;
+    if (!report.allPassed) {
+      await ResultsSheet.show(context, report);
+      return;
+    }
 
     final p = Progress.instance.of(widget.level.id);
     final clean = !p.hintUsed && _attemptsThisSession <= 1;
     final stars = p.hintUsed
         ? (_attemptsThisSession <= 1 ? 2 : 1)
         : (clean ? 3 : 2);
-    final earned =
-        Progress.instance.recordSolve(widget.level.id, widget.level.xp, stars);
+    final earned = Progress.instance
+        .recordSolve(widget.level.id, widget.level.xp, stars);
 
     if (!mounted) return;
     final next = nextLevel(widget.level.id);
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => VictoryDialog(
-        stars: Progress.instance.of(widget.level.id).stars,
-        xpEarned: earned,
-        hasNext: next != null,
-        onNext: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => LevelScreen(level: next!)),
-          );
-        },
-      ),
+    await VictoryOverlay.show(
+      context,
+      stars: Progress.instance.of(widget.level.id).stars,
+      xpEarned: earned,
+      hasNext: next != null,
+      onNext: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => LevelScreen(level: next!)),
+        );
+      },
     );
   }
 
