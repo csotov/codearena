@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/worlds.dart';
 import '../engine/blocks.dart';
 import '../engine/blocks_vm.dart';
+import '../engine/coach.dart';
 import '../engine/cpp_runner.dart';
 import '../engine/judge.dart';
 import '../engine/runner.dart';
@@ -46,6 +47,9 @@ class _LevelScreenState extends State<LevelScreen>
   bool _consoleError = false;
   int _hintsShown = 0;
   int _attemptsThisSession = 0;
+
+  /// Consecutive failed battles on this level — feeds Coach escalation.
+  int _failStreak = 0;
 
   bool get _usesBlocks => widget.level.mode != EditorMode.code;
   bool get _hybrid => widget.level.mode == EditorMode.hybrid;
@@ -145,9 +149,12 @@ class _LevelScreenState extends State<LevelScreen>
     if (!mounted) return;
     setState(() => _busy = false);
     if (!report.allPassed) {
-      await ResultsSheet.show(context, report);
+      final tip = Coach.analyze(report, failStreak: _failStreak);
+      _failStreak++;
+      await ResultsSheet.show(context, report, coach: tip);
       return;
     }
+    _failStreak = 0;
 
     final p = Progress.instance.of(widget.level.id);
     final clean = !p.hintUsed && _attemptsThisSession <= 1;

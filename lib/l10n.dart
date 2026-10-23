@@ -57,6 +57,7 @@ class L {
     'hints': {'es': 'Pistas', 'en': 'Hints'},
     'hint': {'es': 'Pista', 'en': 'Hint'},
     'show_hint': {'es': 'Mostrar pista', 'en': 'Show hint'},
+    'coach': {'es': '¿Qué pasó?', 'en': 'What went wrong?'},
     'editor_code': {'es': 'Código', 'en': 'Code'},
     'editor_blocks': {'es': 'Bloques', 'en': 'Blocks'},
     'console': {'es': 'Consola', 'en': 'Console'},
