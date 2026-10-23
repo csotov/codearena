@@ -2,12 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../engine/judge.dart';
 import '../l10n.dart';
 import '../services/sfx.dart';
 import 'theme.dart';
 
 /// Full-screen victory celebration: confetti burst, stars that pop in
-/// one by one, XP counter, and the "next level" button appears on its
+/// one by one, XP counter, test summary with expandable details, a
+/// Big-O teaching chip, and the "next level" button appears on its
 /// own — no extra taps required. Tap anywhere to fast-forward.
 class VictoryOverlay extends StatefulWidget {
   const VictoryOverlay({
@@ -16,6 +18,8 @@ class VictoryOverlay extends StatefulWidget {
     required this.xpEarned,
     required this.hasNext,
     required this.onNext,
+    this.report,
+    this.complexity,
   });
 
   final int stars; // 1..3
@@ -23,12 +27,20 @@ class VictoryOverlay extends StatefulWidget {
   final bool hasNext;
   final VoidCallback onNext;
 
+  /// The judge report (all passed — shown as "5/5" + expandable list).
+  final JudgeReport? report;
+
+  /// Big-O estimate + teaching blurb, from `Complexity.analyze`.
+  final ({String notation, String es, String en})? complexity;
+
   static Future<void> show(
     BuildContext context, {
     required int stars,
     required int xpEarned,
     required bool hasNext,
     required VoidCallback onNext,
+    JudgeReport? report,
+    ({String notation, String es, String en})? complexity,
   }) {
     return showGeneralDialog(
       context: context,
@@ -41,6 +53,8 @@ class VictoryOverlay extends StatefulWidget {
         xpEarned: xpEarned,
         hasNext: hasNext,
         onNext: onNext,
+        report: report,
+        complexity: complexity,
       ),
     );
   }
@@ -52,6 +66,7 @@ class VictoryOverlay extends StatefulWidget {
 class _VictoryOverlayState extends State<VictoryOverlay>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c;
+  bool _showTests = false;
   final _particles =
       List.generate(80, (i) => _Confetto(i, math.Random(42 + i * 7)));
 
@@ -90,9 +105,10 @@ class _VictoryOverlayState extends State<VictoryOverlay>
                 ),
                 // center card
                 Center(
-                  child: Transform.scale(
-                    scale: _curved(0.0, 0.25, Curves.easeOutBack),
-                    child: Container(
+                  child: SingleChildScrollView(
+                    child: Transform.scale(
+                      scale: _curved(0.0, 0.25, Curves.easeOutBack),
+                      child: Container(
                       width: 320,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 26, vertical: 26),
@@ -137,6 +153,16 @@ class _VictoryOverlayState extends State<VictoryOverlay>
                                   color: AppTheme.accent2),
                             ),
                           ),
+                          if (widget.report != null)
+                            Opacity(
+                              opacity: _curved(0.55, 0.8),
+                              child: _testsSection(l),
+                            ),
+                          if (widget.complexity != null)
+                            Opacity(
+                              opacity: _curved(0.6, 0.85),
+                              child: _complexityChip(l),
+                            ),
                           const SizedBox(height: 22),
                           // The button slides in automatically — the
                           // player never has to dismiss anything first.
@@ -191,6 +217,7 @@ class _VictoryOverlayState extends State<VictoryOverlay>
                     ),
                   ),
                 ),
+              ),
               ],
             );
           },
@@ -206,6 +233,122 @@ class _VictoryOverlayState extends State<VictoryOverlay>
 
   int _xpShown() =>
       (widget.xpEarned * _curved(0.5, 0.85, Curves.easeOut)).round();
+
+  /// "Pasaste 5/5 pruebas" plus an expandable per-test list for the
+  /// curious kid — details stay tucked away unless asked for.
+  Widget _testsSection(L l) {
+    final rep = widget.report!;
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => setState(() => _showTests = !_showTests),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check_circle,
+                      color: AppTheme.good, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${l.t('tests_passed')} '
+                    '${rep.passedCount}/${rep.total}',
+                    style: const TextStyle(
+                        fontSize: 13, color: AppTheme.good,
+                        fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    _showTests
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    size: 18,
+                    color: AppTheme.textLo,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_showTests)
+            Container(
+              constraints: const BoxConstraints(maxHeight: 150),
+              margin: const EdgeInsets.only(top: 4),
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (var i = 0; i < rep.results.length; i++)
+                    _testRow(rep.results[i], i, l),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _testRow(TestResult r, int i, L l) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(
+            r.passed ? Icons.check_circle : Icons.cancel,
+            size: 14,
+            color: r.passed ? AppTheme.good : AppTheme.bad,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              r.hidden
+                  ? '${l.t('hidden_test')} ${i + 1}'
+                  : '${l.t('sample')} ${i + 1}',
+              style:
+                  const TextStyle(fontSize: 12, color: AppTheme.textLo),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Big-O teaching chip: the notation + a one-line "why" in plain
+  /// words — plants the seed that every program has a cost shape.
+  Widget _complexityChip(L l) {
+    final c = widget.complexity!;
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: AppTheme.accent.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(12),
+          border:
+              Border.all(color: AppTheme.accent.withOpacity(0.45)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(c.notation,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                    color: AppTheme.accent)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(l.pick(c.es, c.en),
+                  style: const TextStyle(
+                      fontSize: 11.5, height: 1.35,
+                      color: AppTheme.textLo)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _star(int i, bool earned) {
     final s = _curved(0.28 + i * 0.15, 0.5 + i * 0.15,

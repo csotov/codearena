@@ -161,6 +161,7 @@ class L {
       'es': '¡Resuelve tu primer nivel y vuelve!',
       'en': 'Solve your first level and come back!'
     },
+    'tests_passed': {'es': 'Pruebas superadas', 'en': 'Tests passed'},
     'accuracy': {'es': 'Precisión', 'en': 'Accuracy'},
     'total_xp': {'es': 'XP total', 'en': 'Total XP'},
     'levels_solved': {'es': 'Niveles resueltos', 'en': 'Levels solved'},

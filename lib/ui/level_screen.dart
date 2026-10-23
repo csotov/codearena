@@ -4,6 +4,7 @@ import '../data/worlds.dart';
 import '../engine/blocks.dart';
 import '../engine/blocks_vm.dart';
 import '../engine/coach.dart';
+import '../engine/complexity.dart';
 import '../engine/cpp_runner.dart';
 import '../engine/judge.dart';
 import '../engine/runner.dart';
@@ -171,6 +172,8 @@ class _LevelScreenState extends State<LevelScreen>
       stars: Progress.instance.of(widget.level.id).stars,
       xpEarned: earned,
       hasNext: next != null,
+      report: report,
+      complexity: Complexity.analyze(_currentCode),
       onNext: () {
         Navigator.pushReplacement(
           context,
