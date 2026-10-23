@@ -152,6 +152,15 @@ class L {
       'en': 'Start fresh with a new profile'
     },
     'dashboard': {'es': 'Panel de resultados', 'en': 'Progress dashboard'},
+    'practice': {'es': 'Modo repaso', 'en': 'Practice mode'},
+    'practice_tip': {
+      'es': 'Repasa un nivel ya ganado al azar para reforzar',
+      'en': 'Replay a random beaten level to reinforce'
+    },
+    'practice_none': {
+      'es': '¡Resuelve tu primer nivel y vuelve!',
+      'en': 'Solve your first level and come back!'
+    },
     'accuracy': {'es': 'Precisión', 'en': 'Accuracy'},
     'total_xp': {'es': 'XP total', 'en': 'Total XP'},
     'levels_solved': {'es': 'Niveles resueltos', 'en': 'Levels solved'},
